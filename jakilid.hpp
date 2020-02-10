@@ -106,13 +106,13 @@ public:
 
     template<class T>
     std::enable_if_t<find_from_interprocess_string <T>::value, T>
-    internal_from_string(interprocess_string str) const {
+    internal_from_string(const interprocess_string& str) const {
         return from_interprocess_string<T>(std::move(str));
     }
 
     template<class T>
     std::enable_if_t<!find_from_interprocess_string <T>::value, T>
-    internal_from_string(interprocess_string str) const {
+    internal_from_string(const interprocess_string& str) const {
         byte_array result;
         std::copy_n(str.begin(), std::back_inserter(result), str.size());
         return from_byte_array<T>(result);
