@@ -15,6 +15,12 @@ constexpr char segment_name[] = "jakilid";
 
 using byte_array = std::vector<std::uint8_t>;
 
+template<class T>
+byte_array to_byte_array(T t);
+
+template<class T>
+T from_byte_array(const byte_array &);
+
 using interprocess_string_allocator = boost::interprocess::allocator<uint8_t ,
         boost::interprocess::managed_shared_memory::segment_manager>;
 
@@ -23,27 +29,14 @@ using interprocess_string = boost::interprocess::basic_string<uint8_t , std::cha
 
 template<class T, class SegmentManager>
 std::enable_if_t<std::is_arithmetic<T>::value, interprocess_string>
-cast_to_interprocess_string(T t, const SegmentManager &segment_manager) {
+to_interprocess_string(T t, const SegmentManager &segment_manager) {
     return interprocess_string(reinterpret_cast<uint8_t *>(&t), sizeof(T),
             interprocess_string_allocator(segment_manager));
 }
 
-template<class T>
+template<class T, class = void>
 std::enable_if_t<std::is_arithmetic<T>::value, T> from_interprocess_string(interprocess_string str) {
     return *reinterpret_cast<T *>(str.data());
-}
-
-template<class T>
-std::enable_if_t<std::is_arithmetic<T>::value, byte_array>
-to_byte_array(T t) {
-    byte_array result;
-    std::copy_n(reinterpret_cast<uint8_t *>(&t), std::back_inserter(result), sizeof(T));
-    return result;
-}
-
-template<class T>
-std::enable_if_t<std::is_arithmetic<T>::value, T> from_byte_array(const byte_array& input) {
-    return *reinterpret_cast<T *>(input.data());
 }
 
 template<class Key, class Value>
@@ -86,25 +79,52 @@ public:
         return segment->find_or_construct<Jakilid>(name.c_str())();
     }
 
-    static std::false_type is_castable_imp(...);
+#define GENERATE_FIND(function_name) \
+    static std::false_type find_##function_name##_impl(...); \
+    template<class T, class = decltype(function_name<T, decltype(manager())>)> \
+    static std::true_type find_##function_name##_impl(T* t); \
+    template<class T> \
+    using find_##function_name = decltype(find_##function_name##_impl((T *) 0)) \
 
-    template<class T, class = decltype(cast_to_interprocess_string<T, decltype(manager())>)>
-    static std::true_type is_castable_imp(T* t);
+    GENERATE_FIND(to_interprocess_string);
+    GENERATE_FIND(from_interprocess_string);
+
+#undef GENERATE_FIND
 
     template<class T>
-    using is_castable = decltype(is_castable_imp((T*)0));
+    std::enable_if_t<find_to_interprocess_string<T>::value, interprocess_string>
+    internal_to_string(T t) const {
+        return to_interprocess_string(std::move(t), manager());
+    }
 
     template<class T>
-    interprocess_string 
+    std::enable_if_t<!find_to_interprocess_string <T>::value, interprocess_string>
+    internal_to_string(T t) const {
+        auto result = to_byte_array(t);
+        return interprocess_string(result.data(), result.size(), manager());
+    }
 
-    template<class K = Key, class V = Value>
-    std::enable_if_t<is_castable<K>::value && is_castable<V>::value, bool>
-    insert(const Key &key, const Value &value) {
-        return hash_map.insert(cast_to_interprocess_string(key, manager()), cast_to_interprocess_string(value, manager()));
+    template<class T>
+    std::enable_if_t<find_from_interprocess_string <T>::value, T>
+    internal_from_string(interprocess_string str) const {
+        return from_interprocess_string<T>(std::move(str));
+    }
+
+    template<class T>
+    std::enable_if_t<!find_from_interprocess_string <T>::value, T>
+    internal_from_string(interprocess_string str) const {
+        byte_array result;
+        std::copy_n(str.begin(), std::back_inserter(result), str.size());
+        return from_byte_array<T>(result);
+    }
+
+
+    bool insert(const Key &key, const Value &value) {
+        return hash_map.insert(internal_to_string(key), internal_to_string(value));
     }
 
     Value find(const Key &key) const {
-        return from_interprocess_string<Value>(hash_map.find(cast_to_interprocess_string(key, manager())));
+        return internal_from_string<Value>(hash_map.find(internal_to_string(key)));
     }
 };
 
