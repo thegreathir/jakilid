@@ -16,7 +16,7 @@ constexpr char segment_name[] = "jakilid";
 using byte_array = std::vector<std::uint8_t>;
 
 template<class T>
-byte_array to_byte_array(T t);
+byte_array to_byte_array(const T& t);
 
 template<class T>
 T from_byte_array(const byte_array &);
@@ -24,19 +24,19 @@ T from_byte_array(const byte_array &);
 using interprocess_string_allocator = boost::interprocess::allocator<uint8_t ,
         boost::interprocess::managed_shared_memory::segment_manager>;
 
-using interprocess_string = boost::interprocess::basic_string<uint8_t , std::char_traits<uint8_t >,
+using interprocess_string = boost::interprocess::basic_string<uint8_t , std::char_traits<uint8_t>,
         interprocess_string_allocator>;
 
 template<class T, class SegmentManager>
 std::enable_if_t<std::is_arithmetic<T>::value, interprocess_string>
-to_interprocess_string(T t, const SegmentManager &segment_manager) {
-    return interprocess_string(reinterpret_cast<uint8_t *>(&t), sizeof(T),
+to_interprocess_string(const T &t, const SegmentManager &segment_manager) {
+    return interprocess_string(reinterpret_cast<const uint8_t *>(&t), sizeof(T),
             interprocess_string_allocator(segment_manager));
 }
 
 template<class T, class = void>
-std::enable_if_t<std::is_arithmetic<T>::value, T> from_interprocess_string(interprocess_string str) {
-    return *reinterpret_cast<T *>(str.data());
+std::enable_if_t<std::is_arithmetic<T>::value, T> from_interprocess_string(const interprocess_string& str) {
+    return *reinterpret_cast<const T *>(str.c_str());
 }
 
 template<class Key, class Value>
@@ -61,6 +61,44 @@ private:
         return segment->get_segment_manager();
     }
 
+#define GENERATE_FIND(function_name) \
+    static std::false_type find_##function_name##_impl(...); \
+    template<class T, class = decltype(function_name<T, decltype(manager())>)> \
+    static std::true_type find_##function_name##_impl(T* t); \
+    template<class T> \
+    using find_##function_name = decltype(find_##function_name##_impl((T *) 0)) \
+
+
+    GENERATE_FIND(to_interprocess_string);
+
+    GENERATE_FIND(from_interprocess_string);
+#undef GENERATE_FIND
+
+    template<class T>
+    std::enable_if_t<find_to_interprocess_string<T>::value, interprocess_string>
+    internal_to_string(const T &t) const {
+        return to_interprocess_string(t, manager());
+    }
+
+    template<class T>
+    std::enable_if_t<!find_to_interprocess_string<T>::value, interprocess_string>
+    internal_to_string(const T &t) const {
+        auto result = to_byte_array(t);
+        return interprocess_string(result.data(), result.size(), manager());
+    }
+
+    template<class T>
+    std::enable_if_t<find_from_interprocess_string<T>::value, T>
+    internal_from_string(const interprocess_string& str) const {
+        return from_interprocess_string<T>(str);
+    }
+
+    template<class T>
+    std::enable_if_t<!find_from_interprocess_string<T>::value, T>
+    internal_from_string(const interprocess_string& str) const {
+        return from_byte_array<T>(byte_array(str.begin(), str.end()));
+    }
+
     hash_map_type hash_map;
 
 public:
@@ -78,46 +116,6 @@ public:
 
         return segment->find_or_construct<Jakilid>(name.c_str())();
     }
-
-#define GENERATE_FIND(function_name) \
-    static std::false_type find_##function_name##_impl(...); \
-    template<class T, class = decltype(function_name<T, decltype(manager())>)> \
-    static std::true_type find_##function_name##_impl(T* t); \
-    template<class T> \
-    using find_##function_name = decltype(find_##function_name##_impl((T *) 0)) \
-
-    GENERATE_FIND(to_interprocess_string);
-    GENERATE_FIND(from_interprocess_string);
-
-#undef GENERATE_FIND
-
-    template<class T>
-    std::enable_if_t<find_to_interprocess_string<T>::value, interprocess_string>
-    internal_to_string(T t) const {
-        return to_interprocess_string(std::move(t), manager());
-    }
-
-    template<class T>
-    std::enable_if_t<!find_to_interprocess_string <T>::value, interprocess_string>
-    internal_to_string(T t) const {
-        auto result = to_byte_array(t);
-        return interprocess_string(result.data(), result.size(), manager());
-    }
-
-    template<class T>
-    std::enable_if_t<find_from_interprocess_string <T>::value, T>
-    internal_from_string(const interprocess_string& str) const {
-        return from_interprocess_string<T>(std::move(str));
-    }
-
-    template<class T>
-    std::enable_if_t<!find_from_interprocess_string <T>::value, T>
-    internal_from_string(const interprocess_string& str) const {
-        byte_array result;
-        std::copy_n(str.begin(), std::back_inserter(result), str.size());
-        return from_byte_array<T>(result);
-    }
-
 
     bool insert(const Key &key, const Value &value) {
         return hash_map.insert(internal_to_string(key), internal_to_string(value));
