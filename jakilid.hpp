@@ -21,10 +21,10 @@ byte_array to_byte_array(const T& t);
 template<class T>
 T from_byte_array(const byte_array &);
 
-using interprocess_string_allocator = boost::interprocess::allocator<uint8_t ,
+using interprocess_string_allocator = boost::interprocess::allocator<uint8_t,
         boost::interprocess::managed_shared_memory::segment_manager>;
 
-using interprocess_string = boost::interprocess::basic_string<uint8_t , std::char_traits<uint8_t>,
+using interprocess_string = boost::interprocess::basic_string<uint8_t, std::char_traits<uint8_t>,
         interprocess_string_allocator>;
 
 template<class T, class SegmentManager>
@@ -35,8 +35,20 @@ to_interprocess_string(const T &t, const SegmentManager &segment_manager) {
 }
 
 template<class T, class = void>
-std::enable_if_t<std::is_arithmetic<T>::value, T> from_interprocess_string(const interprocess_string& str) {
+std::enable_if_t<std::is_arithmetic<T>::value, T> from_interprocess_string(const interprocess_string &str) {
     return *reinterpret_cast<const T *>(str.c_str());
+}
+
+template<class T, class SegmentManager>
+std::enable_if_t<std::is_same<T, std::string>::value, interprocess_string>
+to_interprocess_string(const T &t, const SegmentManager &segment_manager) {
+    return interprocess_string(t.begin(), t.end(), interprocess_string_allocator(segment_manager));
+}
+
+template<class T, class = void>
+std::enable_if_t<std::is_same<T, std::string>::value, T>
+from_interprocess_string(const interprocess_string &str) {
+    return std::string(reinterpret_cast<const char *>(str.c_str()), str.size());
 }
 
 template<class Key, class Value>
