@@ -6,9 +6,9 @@ using SharedMap = jakilid::Jakilid<int, std::string>;
 
 int main() {
 
-    auto shared_map = SharedMap::get_instance("map2");
+    auto shared_map = SharedMap::GetInstance("map2");
 
-    std::cout << shared_map->find(17) << std::endl;
+    std::cout << shared_map->Find(18) << std::endl;
 
     return 0;
 }
