@@ -158,11 +158,8 @@ private:
 
     HashMap hash_map_;
 
-    static std::unique_ptr<boost::interprocess::managed_shared_memory> segment_;
+    inline static std::unique_ptr<boost::interprocess::managed_shared_memory> segment_;
 };
-
-template<class Key, class Value>
-std::unique_ptr<boost::interprocess::managed_shared_memory> Jakilid<Key, Value>::segment_;
 
 }
 

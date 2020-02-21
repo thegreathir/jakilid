@@ -1,6 +1,7 @@
-#include "jakilid.hpp"
+#include "../jakilid.hpp"
 
 #include <iostream>
+#include <string>
 
 using SharedMap = jakilid::Jakilid<int, std::string>;
 
