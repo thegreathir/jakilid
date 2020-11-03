@@ -10,7 +10,7 @@
 
 namespace jakilid {
 
-constexpr size_t kSegmentSize = 1UL << 32;
+constexpr size_t kSegmentSize = (1UL << 20) * 500;
 constexpr auto kSegmentName = "jakilid";
 
 using ByteArray = std::vector<std::uint8_t>;
@@ -61,7 +61,7 @@ public:
             );
         }
 
-        return segment_->find_or_construct<Jakilid>(name.c_str())();
+        return segment_->find_or_construct<Jakilid>(name.c_str())(); // TODO: add a function to remove instance
     }
 
     bool Empty() const {
@@ -73,15 +73,11 @@ public:
     }
 
     bool Find(const Key &key, Value &val) const {
-        SharedString res;
+        SharedString res(manager());
         if (!hash_map_.find(InternalSerialize(key), res))
             return false;
-        val = InternalDeserialize(res);
+        val = InternalDeserialize<Value>(res);
         return true;
-    }
-
-    Value Find(const Key &key) const {
-        return InternalDeserialize<Value>(hash_map_.find(InternalSerialize(key)));
     }
 
     bool Contains(const Key &key) const {
