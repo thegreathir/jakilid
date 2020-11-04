@@ -4,6 +4,7 @@
 #include <boost/interprocess/allocators/allocator.hpp>
 #include <boost/interprocess/managed_shared_memory.hpp>
 #include <boost/interprocess/containers/string.hpp>
+#include <boost/spirit/home/support/string_traits.hpp>
 #include <cuckoohash_map.hh>
 #include <memory>
 #include <type_traits>
@@ -40,13 +41,13 @@ Deserialize(const SharedString &str) {
 }
 
 template<class T, class SegmentManager>
-std::enable_if_t<std::is_same<T, std::string>::value, SharedString>
+std::enable_if_t<boost::spirit::traits::is_string<T>::value, SharedString>
 Serialize(const T &t, const SegmentManager &segment_manager) {
     return SharedString(t.begin(), t.end(), SharedStringAllocator(segment_manager));
 }
 
 template<class T, class = void>
-std::enable_if_t<std::is_same<T, std::string>::value, T>
+std::enable_if_t<boost::spirit::traits::is_string<T>::value, T>
 Deserialize(const SharedString &str) {
     return std::string(reinterpret_cast<const char *>(str.c_str()), str.size());
 }
