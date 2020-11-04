@@ -1,11 +1,12 @@
 #include "../jakilid.hpp"
 
 #include <functional>
+#include <ios>
 #include <iostream>
 #include <stdexcept>
 #include <string>
 
-using SharedMap = jakilid::Jakilid<std::string, std::string>;
+using SharedMap = jakilid::Jakilid;
 
 void raise_for_arguments(const std::vector<std::string>& args, unsigned int number_of_mandatory_arguments) {
     if (args.size() != number_of_mandatory_arguments)

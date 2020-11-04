@@ -51,7 +51,6 @@ Deserialize(const SharedString &str) {
     return std::string(reinterpret_cast<const char *>(str.c_str()), str.size());
 }
 
-template<class Key, class Value>
 class Jakilid {
 public:
     static Jakilid *GetInstance(const std::string &name) {
@@ -72,6 +71,8 @@ public:
         return hash_map_.size();
     }
 
+
+    template<class Key, class Value>
     bool Find(const Key &key, Value &val) const {
         SharedString res(manager());
         if (!hash_map_.find(InternalSerialize(key), res))
@@ -80,18 +81,26 @@ public:
         return true;
     }
 
+
+    template<class Key>
     bool Contains(const Key &key) const {
         return hash_map_.contains(key);
     }
 
+
+    template<class Key, class Value>
     bool Insert(const Key &key, const Value &value) {
         return hash_map_.insert(InternalSerialize(key), InternalSerialize(value));
     }
 
+
+    template<class Key, class Value>
     bool Update(const Key &key, const Value &value) {
         return hash_map_.update(InternalSerialize(key), InternalSerialize(value));
     }
 
+
+    template<class Key>
     bool Erase(const Key &key) {
         return hash_map_.erase(InternalSerialize(key));
     }
