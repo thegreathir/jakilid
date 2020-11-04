@@ -41,13 +41,20 @@ bool erase(const std::string& instance_name, const std::vector<std::string>& arg
     return SharedMap::GetInstance(instance_name)->Erase(args[0]);
 }
 
+bool size(const std::string& instance_name, const std::vector<std::string>& args) {
+    raise_for_arguments(args, 0);
+    std::cout << SharedMap::GetInstance(instance_name)->Size() << std::endl;
+    return true;
+}
+
 using CommandHandler = std::function<bool(const std::string&, const std::vector<std::string>&)>;
 
 auto command_handlers = std::map<std::string, CommandHandler> {
     {"insert", insert},
     {"find", find},
     {"update", update},
-    {"erase", erase}
+    {"erase", erase},
+    {"size", size}
 };
 
 int main(int argc, char* argv[]) {
