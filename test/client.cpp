@@ -15,7 +15,8 @@ void raise_for_arguments(const std::vector<std::string>& args, unsigned int numb
 bool insert(const std::string& instance_name, const std::vector<std::string>& args) {
 
     raise_for_arguments(args, 2);
-    return SharedDict::GetInstance(instance_name)->Insert(args[0], args[1]);
+    SharedDict::GetInstance(instance_name)->Insert(args[0], args[1]);
+    return true;
 }
 
 bool find(const std::string& instance_name, const std::vector<std::string>& args) {

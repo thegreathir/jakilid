@@ -108,7 +108,10 @@ public:
 
     template<class Key, class Value>
     bool Insert(const Key &key, const Value &value) {
-        return hash_map_.insert(InternalSerialize(key), InternalSerialize(value));
+        return hash_map_.upsert(InternalSerialize(key), [value](HashMap::mapped_type& v) {
+            v = InternalSerialize(value);
+        }
+        , InternalSerialize(value));
     }
 
 
