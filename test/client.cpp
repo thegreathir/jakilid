@@ -5,7 +5,7 @@
 #include <stdexcept>
 #include <string>
 
-using SharedMap = jakilid::Jakilid;
+using jakilid::SharedDict;
 
 void raise_for_arguments(const std::vector<std::string>& args, unsigned int number_of_mandatory_arguments) {
     if (args.size() != number_of_mandatory_arguments)
@@ -15,14 +15,14 @@ void raise_for_arguments(const std::vector<std::string>& args, unsigned int numb
 bool insert(const std::string& instance_name, const std::vector<std::string>& args) {
 
     raise_for_arguments(args, 2);
-    return SharedMap::GetInstance(instance_name)->Insert(args[0], args[1]);
+    return SharedDict::GetInstance(instance_name)->Insert(args[0], args[1]);
 }
 
 bool find(const std::string& instance_name, const std::vector<std::string>& args) {
     raise_for_arguments(args, 1);
 
     std::string value;
-    auto success = SharedMap::GetInstance(instance_name)->Find(args[0], value);
+    auto success = SharedDict::GetInstance(instance_name)->Find(args[0], value);
     if (success) {
         std::cout << value << std::endl;
         return true;
@@ -33,23 +33,23 @@ bool find(const std::string& instance_name, const std::vector<std::string>& args
 
 bool update(const std::string& instance_name, const std::vector<std::string>& args) {
     raise_for_arguments(args, 2);
-    return SharedMap::GetInstance(instance_name)->Update(args[0], args[1]);
+    return SharedDict::GetInstance(instance_name)->Update(args[0], args[1]);
 }
 
 bool erase(const std::string& instance_name, const std::vector<std::string>& args) {
     raise_for_arguments(args, 1);
-    return SharedMap::GetInstance(instance_name)->Erase(args[0]);
+    return SharedDict::GetInstance(instance_name)->Erase(args[0]);
 }
 
 bool size(const std::string& instance_name, const std::vector<std::string>& args) {
     raise_for_arguments(args, 0);
-    std::cout << SharedMap::GetInstance(instance_name)->Size() << std::endl;
+    std::cout << SharedDict::GetInstance(instance_name)->Size() << std::endl;
     return true;
 }
 
 bool drop(const std::string& instance_name, const std::vector<std::string>& args) {
     raise_for_arguments(args, 0);
-    return SharedMap::DropInstance(instance_name);
+    return SharedDict::DropInstance(instance_name);
 }
 
 using CommandHandler = std::function<bool(const std::string&, const std::vector<std::string>&)>;

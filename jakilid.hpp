@@ -59,16 +59,16 @@ Serialize(T t, const SegmentManager &segment_manager) {
     return SharedString(reinterpret_cast<const uint8_t *>(t), SharedStringAllocator(segment_manager));
 }
 
-class Jakilid {
+class SharedDict {
 public:
-    static Jakilid *GetInstance(const std::string &name) {
+    static SharedDict *GetInstance(const std::string &name) {
         if (!segment_) {
             segment_ = std::make_unique<boost::interprocess::managed_shared_memory>(
                     boost::interprocess::open_or_create, kSegmentName, kSegmentSize
             );
         }
 
-        return segment_->find_or_construct<Jakilid>(name.c_str())(); // TODO: add a function to remove instance
+        return segment_->find_or_construct<SharedDict>(name.c_str())(); // TODO: add a function to remove instance
     }
 
     static bool DropInstance(const std::string& name) {
@@ -78,7 +78,7 @@ public:
             );
         }
 
-        return segment_->destroy<Jakilid>(name.c_str());
+        return segment_->destroy<SharedDict>(name.c_str());
     }
 
     bool Empty() const {
@@ -123,7 +123,7 @@ public:
         return hash_map_.erase(InternalSerialize(key));
     }
 
-    Jakilid()
+    SharedDict()
     : hash_map_(LIBCUCKOO_DEFAULT_SIZE, Hasher(), KeyEqual(), Allocator(segment_->get_segment_manager()))
     {}
 
