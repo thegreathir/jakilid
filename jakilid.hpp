@@ -1,10 +1,11 @@
 #ifndef JAKILID_JAKILID_HPP
 #define JAKILID_JAKILID_HPP
 
+#include "helper.hpp"
+
 #include <boost/interprocess/allocators/allocator.hpp>
 #include <boost/interprocess/managed_shared_memory.hpp>
 #include <boost/interprocess/containers/string.hpp>
-#include <boost/spirit/home/support/string_traits.hpp>
 #include <cuckoohash_map.hh>
 #include <memory>
 #include <type_traits>
@@ -41,15 +42,21 @@ Deserialize(const SharedString &str) {
 }
 
 template<class T, class SegmentManager>
-std::enable_if_t<boost::spirit::traits::is_string<T>::value, SharedString>
+std::enable_if_t<std::is_same<T, std::string>::value, SharedString>
 Serialize(const T &t, const SegmentManager &segment_manager) {
     return SharedString(t.begin(), t.end(), SharedStringAllocator(segment_manager));
 }
 
 template<class T, class = void>
-std::enable_if_t<boost::spirit::traits::is_string<T>::value, T>
+std::enable_if_t<std::is_same<T, std::string>::value, T>
 Deserialize(const SharedString &str) {
     return std::string(reinterpret_cast<const char *>(str.c_str()), str.size());
+}
+
+template<class T, class SegmentManager>
+std::enable_if_t<helper::is_c_string<T>::value, SharedString>
+Serialize(T t, const SegmentManager &segment_manager) {
+    return SharedString(reinterpret_cast<const uint8_t *>(t), SharedStringAllocator(segment_manager));
 }
 
 class Jakilid {
@@ -62,6 +69,16 @@ public:
         }
 
         return segment_->find_or_construct<Jakilid>(name.c_str())(); // TODO: add a function to remove instance
+    }
+
+    static bool DropInstance(const std::string& name) {
+        if (!segment_) {
+            segment_ = std::make_unique<boost::interprocess::managed_shared_memory>(
+                    boost::interprocess::open_or_create, kSegmentName, kSegmentSize
+            );
+        }
+
+        return segment_->destroy<Jakilid>(name.c_str());
     }
 
     bool Empty() const {
@@ -164,7 +181,7 @@ private:
 
     HashMap hash_map_;
 
-    inline static std::unique_ptr<boost::interprocess::managed_shared_memory> segment_;
+    inline static thread_local std::unique_ptr<boost::interprocess::managed_shared_memory> segment_;
 };
 
 }

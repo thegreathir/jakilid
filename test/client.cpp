@@ -47,6 +47,11 @@ bool size(const std::string& instance_name, const std::vector<std::string>& args
     return true;
 }
 
+bool drop(const std::string& instance_name, const std::vector<std::string>& args) {
+    raise_for_arguments(args, 0);
+    return SharedMap::DropInstance(instance_name);
+}
+
 using CommandHandler = std::function<bool(const std::string&, const std::vector<std::string>&)>;
 
 auto command_handlers = std::map<std::string, CommandHandler> {
@@ -54,7 +59,8 @@ auto command_handlers = std::map<std::string, CommandHandler> {
     {"find", find},
     {"update", update},
     {"erase", erase},
-    {"size", size}
+    {"size", size},
+    {"drop", drop}
 };
 
 int main(int argc, char* argv[]) {
