@@ -61,39 +61,35 @@ Serialize(T t, const SegmentManager &segment_manager) {
 
 class SharedDict {
 public:
-    static SharedDict *GetInstance(const std::string &name) {
-        if (!segment_) {
-            segment_ = std::make_unique<boost::interprocess::managed_shared_memory>(
-                    boost::interprocess::open_or_create, kSegmentName, kSegmentSize
-            );
-        }
 
-        return segment_->find_or_construct<SharedDict>(name.c_str())(); // TODO: add a function to remove instance
+    SharedDict(const std::string& name)
+    : name(name)
+    , hash_map_(nullptr)
+    {
+        open();
     }
 
-    static bool DropInstance(const std::string& name) {
-        if (!segment_) {
-            segment_ = std::make_unique<boost::interprocess::managed_shared_memory>(
-                    boost::interprocess::open_or_create, kSegmentName, kSegmentSize
-            );
-        }
-
-        return segment_->destroy<SharedDict>(name.c_str());
+    bool Drop() {
+        hash_map_ = nullptr;
+        return segment_->destroy<HashMap>(name.c_str());
     }
 
     bool Empty() const {
-        return hash_map_.empty();
+        open();
+        return hash_map_->empty();
     }
 
     std::size_t Size() const {
-        return hash_map_.size();
+        open();
+        return hash_map_->size();
     }
 
 
     template<class Key, class Value>
     bool Find(const Key &key, Value &val) const {
+        open();
         SharedString res(manager());
-        if (!hash_map_.find(InternalSerialize(key), res))
+        if (!hash_map_->find(InternalSerialize(key), res))
             return false;
         val = InternalDeserialize<Value>(res);
         return true;
@@ -102,13 +98,15 @@ public:
 
     template<class Key>
     bool Contains(const Key &key) const {
-        return hash_map_.contains(key);
+        open();
+        return hash_map_->contains(key);
     }
 
 
     template<class Key, class Value>
     bool Insert(const Key &key, const Value &value) {
-        return hash_map_.upsert(InternalSerialize(key), [value](HashMap::mapped_type& v) {
+        open();
+        return hash_map_->upsert(InternalSerialize(key), [value](HashMap::mapped_type& v) {
             v = InternalSerialize(value);
         }
         , InternalSerialize(value));
@@ -117,18 +115,16 @@ public:
 
     template<class Key, class Value>
     bool Update(const Key &key, const Value &value) {
-        return hash_map_.update(InternalSerialize(key), InternalSerialize(value));
+        open();
+        return hash_map_->update(InternalSerialize(key), InternalSerialize(value));
     }
 
 
     template<class Key>
     bool Erase(const Key &key) {
-        return hash_map_.erase(InternalSerialize(key));
+        open();
+        return hash_map_->erase(InternalSerialize(key));
     }
-
-    SharedDict()
-    : hash_map_(LIBCUCKOO_DEFAULT_SIZE, Hasher(), KeyEqual(), Allocator(segment_->get_segment_manager()))
-    {}
 
 private:
     using UnderlyingKey = SharedString;
@@ -144,6 +140,22 @@ private:
 
     static auto manager() {
         return segment_->get_segment_manager();
+    }
+
+    void open_manager() const {
+        if (!segment_) {
+            segment_ = std::make_unique<boost::interprocess::managed_shared_memory>(
+                    boost::interprocess::open_or_create, kSegmentName, kSegmentSize
+            );
+        }
+    }
+
+    void open() const {
+        if (hash_map_ == nullptr) {
+            open_manager();
+            hash_map_ = segment_->find_or_construct<HashMap>(name.c_str())(
+                LIBCUCKOO_DEFAULT_SIZE, Hasher(), KeyEqual(), Allocator(manager()));
+        }
     }
 
 #define GENERATE_FIND(function_name) \
@@ -182,7 +194,8 @@ private:
         return FromByteArray<T>(ByteArray(str.begin(), str.end()));
     }
 
-    HashMap hash_map_;
+    const std::string name;
+    mutable HashMap *hash_map_;
 
     inline static thread_local std::unique_ptr<boost::interprocess::managed_shared_memory> segment_;
 };

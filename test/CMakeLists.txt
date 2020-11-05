@@ -6,3 +6,5 @@ add_executable(client client.cpp)
 target_link_libraries(client ${Boost_LIBRARIES})
 target_link_libraries(client pthread)
 target_link_libraries(client rt)
+
+configure_file(functionality.py ${CMAKE_CURRENT_BINARY_DIR}/functionality.py COPYONLY)

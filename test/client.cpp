@@ -15,7 +15,7 @@ void raise_for_arguments(const std::vector<std::string>& args, unsigned int numb
 bool insert(const std::string& instance_name, const std::vector<std::string>& args) {
 
     raise_for_arguments(args, 2);
-    SharedDict::GetInstance(instance_name)->Insert(args[0], args[1]);
+    SharedDict(instance_name).Insert(args[0], args[1]);
     return true;
 }
 
@@ -23,7 +23,7 @@ bool find(const std::string& instance_name, const std::vector<std::string>& args
     raise_for_arguments(args, 1);
 
     std::string value;
-    auto success = SharedDict::GetInstance(instance_name)->Find(args[0], value);
+    auto success = SharedDict(instance_name).Find(args[0], value);
     if (success) {
         std::cout << value << std::endl;
         return true;
@@ -34,23 +34,23 @@ bool find(const std::string& instance_name, const std::vector<std::string>& args
 
 bool update(const std::string& instance_name, const std::vector<std::string>& args) {
     raise_for_arguments(args, 2);
-    return SharedDict::GetInstance(instance_name)->Update(args[0], args[1]);
+    return SharedDict(instance_name).Update(args[0], args[1]);
 }
 
 bool erase(const std::string& instance_name, const std::vector<std::string>& args) {
     raise_for_arguments(args, 1);
-    return SharedDict::GetInstance(instance_name)->Erase(args[0]);
+    return SharedDict(instance_name).Erase(args[0]);
 }
 
 bool size(const std::string& instance_name, const std::vector<std::string>& args) {
     raise_for_arguments(args, 0);
-    std::cout << SharedDict::GetInstance(instance_name)->Size() << std::endl;
+    std::cout << SharedDict(instance_name).Size() << std::endl;
     return true;
 }
 
 bool drop(const std::string& instance_name, const std::vector<std::string>& args) {
     raise_for_arguments(args, 0);
-    return SharedDict::DropInstance(instance_name);
+    return SharedDict(instance_name).Drop();
 }
 
 using CommandHandler = std::function<bool(const std::string&, const std::vector<std::string>&)>;
