@@ -11,6 +11,6 @@ include_directories(${Boost_INCLUDE_DIRS})
 include_directories(extern/pybind11/include)
 add_subdirectory(extern/pybind11)
 
-pybind11_add_module(shared_dict py.cpp)
+pybind11_add_module(jakilid py.cpp)
 
 add_subdirectory(test)
