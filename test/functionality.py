@@ -60,6 +60,22 @@ class TestClient:
         if exit_code != 0:
             TestClient.raise_for_exit_code(exit_code, err)
 
+    def erase(self, key):
+        exit_code, _, err = self.execute("erase", key)
+
+        if exit_code != 0 and err != b"":
+            TestClient.raise_for_exit_code(exit_code, err)
+
+        return exit_code == 0
+
+    def size(self):
+        exit_code, output, err = self.execute("size")
+
+        if exit_code != 0:
+            TestClient.raise_for_exit_code(exit_code, err)
+
+        return int(output.decode().split("\n")[0])
+
 
 class BasicFunctionality(unittest.TestCase):
 
@@ -67,6 +83,7 @@ class BasicFunctionality(unittest.TestCase):
 
     def setUp(self):
         self.client = TestClient(BasicFunctionality.object_name)
+        self.client.drop()
 
     def tearDown(self):
         self.client.drop()
@@ -86,6 +103,38 @@ class BasicFunctionality(unittest.TestCase):
 
         self.client.insert(k1, v2)
         self.assertEqual(v2, self.client.find(k1))
+
+    def test_compare_to_dict(self):
+
+        reference_dict = dict()
+
+        key_pool = [get_random_string() for _ in range(100)]
+        value_pool = [get_random_string() for _ in range(1500)]
+
+        def ins(k, v):
+            reference_dict[k] = v
+            self.client.insert(k, v)
+
+        def rm(k, _):
+            r1 = reference_dict.pop(k, None)
+            r2 = self.client.erase(k)
+
+            self.assertEqual(r1 != None, r2)
+
+        for _ in range(4000):
+            act = random.choices([ins, rm], weights=[5, 1])[0]
+
+            k = random.choice(key_pool)
+            v = random.choice(value_pool)
+
+            act(k, v)
+
+        self.assertEqual(len(reference_dict.keys()), self.client.size())
+
+        for ki, vi in reference_dict.items():
+            vii = self.client.find(ki)
+
+            self.assertEqual(vi, vii)
 
 
 if __name__ == '__main__':
