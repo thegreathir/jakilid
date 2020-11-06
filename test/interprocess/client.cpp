@@ -1,4 +1,4 @@
-#include "../jakilid.hpp"
+#include <jakilid.hpp>
 
 #include <functional>
 #include <iostream>

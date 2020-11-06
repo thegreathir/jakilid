@@ -3,6 +3,8 @@
 
 #include<boost/mpl/bool.hpp>
 
+#include<string>
+
 namespace jakilid {
 
 namespace helper {
@@ -48,6 +50,24 @@ struct is_c_string<char const(&)[N]> : boost::mpl::true_ {};
 
 template <std::size_t N>
 struct is_c_string<wchar_t const(&)[N]> : boost::mpl::true_ {};
+
+template <typename T>
+struct is_std_string : boost::mpl::false_ {};
+
+template <typename T>
+struct is_std_string<T const> : is_std_string<T> {};
+
+template <typename T, typename Traits, typename Allocator>
+struct is_std_string<std::basic_string<T, Traits, Allocator> > : boost::mpl::true_ {};
+
+template <typename T>
+struct is_bool : boost::mpl::false_ {};
+
+template <typename T>
+struct is_bool<T const> : is_bool<T> {};
+
+template <>
+struct is_bool<bool> : boost::mpl::true_ {};
 
 }
 
