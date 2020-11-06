@@ -9,9 +9,7 @@
 #include <boost/interprocess/allocators/allocator.hpp>
 #include <boost/interprocess/containers/string.hpp>
 #include <boost/interprocess/managed_shared_memory.hpp>
-#include <boost/mpl/contains.hpp>
 #include <boost/mpl/or.hpp>
-#include <boost/mpl/vector.hpp>
 #include <type_traits>
 
 namespace jakilid {
@@ -20,13 +18,9 @@ template <class T, class = void> struct __type_char__helper {
   static constexpr char value = '*';
 };
 
-using int_types =
-    boost::mpl::vector<int, unsigned int, short, unsigned short, long,
-                       unsigned long, long long, unsigned long long>;
-
 template <class T>
 struct __type_char__helper<
-    T, std::enable_if_t<boost::mpl::contains<int_types, T>::value>> {
+    T, std::enable_if_t<helper::is_numerical_integral<T>::value>> {
   static constexpr char value = 'i';
 };
 
@@ -44,7 +38,12 @@ struct __type_char__helper<
 
 template <class T>
 struct __type_char__helper<T, std::enable_if_t<helper::is_bool<T>::value>> {
-  static constexpr char value = 's';
+  static constexpr char value = 'b';
+};
+
+template <class T>
+struct __type_char__helper<T, std::enable_if_t<helper::is_char<T>::value>> {
+  static constexpr char value = 'c';
 };
 
 template <class T>
