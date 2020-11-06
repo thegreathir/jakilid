@@ -32,9 +32,9 @@ bool find(const std::string& instance_name, const std::vector<std::string>& args
     return false;
 }
 
-bool update(const std::string& instance_name, const std::vector<std::string>& args) {
-    raise_for_arguments(args, 2);
-    return SharedDict(instance_name).Update(args[0], args[1]);
+bool contains(const std::string& instance_name, const std::vector<std::string>& args) {
+    raise_for_arguments(args, 1);
+    return SharedDict(instance_name).Contains(args[0]);
 }
 
 bool erase(const std::string& instance_name, const std::vector<std::string>& args) {
@@ -58,7 +58,7 @@ using CommandHandler = std::function<bool(const std::string&, const std::vector<
 auto command_handlers = std::map<std::string, CommandHandler> {
     {"insert", insert},
     {"find", find},
-    {"update", update},
+    {"contains", contains},
     {"erase", erase},
     {"size", size},
     {"drop", drop}

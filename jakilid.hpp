@@ -99,7 +99,7 @@ public:
     template<class Key>
     bool Contains(const Key &key) const {
         open();
-        return hash_map_->contains(key);
+        return hash_map_->contains(InternalSerialize(key));
     }
 
 
@@ -110,13 +110,6 @@ public:
             v = InternalSerialize(value);
         }
         , InternalSerialize(value));
-    }
-
-
-    template<class Key, class Value>
-    bool Update(const Key &key, const Value &value) {
-        open();
-        return hash_map_->update(InternalSerialize(key), InternalSerialize(value));
     }
 
 
