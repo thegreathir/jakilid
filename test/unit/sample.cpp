@@ -29,4 +29,19 @@ TEST(sample, sample2) {
     d.Find(false, f);
 
     std::cout << f << std::endl;
+
+    d.Insert("kkk", 'J');
+
+    char cc;
+    d.Find("kkk", cc);
+    std::cout << cc << std::endl;
+
+    signed char sc = -126;
+
+    d.Insert("SCC", sc);
+
+    signed char gh;
+    d.Find("SCC", gh);
+    std::cout << (int)gh << std::endl;
+
 }

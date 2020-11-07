@@ -125,6 +125,9 @@ template<class T>
 struct __is_signed_integer : boost::mpl::false_ {};
 
 template<>
+struct __is_signed_integer<signed char> : boost::mpl::true_ {};
+
+template<>
 struct __is_signed_integer<short> : boost::mpl::true_ {};
 
 template<>
@@ -143,6 +146,9 @@ struct is_signed_integer : __is_signed_integer<std::remove_cv_t<T>> {};
 
 template<class T>
 struct __is_unsigned_integer : boost::mpl::false_ {};
+
+template<>
+struct __is_unsigned_integer<unsigned char> : boost::mpl::true_ {};
 
 template<>
 struct __is_unsigned_integer<unsigned short> : boost::mpl::true_ {};
