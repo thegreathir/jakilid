@@ -12,3 +12,21 @@ TEST(sample, sample1) {
     std::cout << sizeof(y) << std::endl;
     std::cout << sizeof(z) << std::endl;
 }
+
+TEST(sample, sample2) {
+    jakilid::SharedDict d("shd");
+
+    d.Insert(-10, L"امیرعباس");
+    d.Insert(false, 1.0/4);
+
+    std::wstring res;
+
+    d.Find(-10, res);
+
+    std::cout << (res == L"امیرعباس") << std::endl;
+    
+    float f;
+    d.Find(false, f);
+
+    std::cout << f << std::endl;
+}

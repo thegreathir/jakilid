@@ -1,7 +1,6 @@
 #ifndef JAKILID_JAKILID_HPP
 #define JAKILID_JAKILID_HPP
 
-#include "helper.hpp"
 #include "serializer.hpp"
 
 #include <boost/interprocess/allocators/allocator.hpp>

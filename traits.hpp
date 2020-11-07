@@ -161,27 +161,27 @@ struct is_unsigned_integer : __is_unsigned_integer<std::remove_cv_t<T>> {};
 
 /* ################################################## */
 
-template <class T, class = void> struct __type_char {
+template <class T, class = void> struct type_char {
     static constexpr char value = '*';
 };
 
 template <class T>
-struct __type_char<T, std::enable_if_t<__is_signed_integer<T>::value>> {
+struct type_char<T, std::enable_if_t<__is_signed_integer<T>::value>> {
     static constexpr char value = 'i';
 };
 
 template <class T>
-struct __type_char<T, std::enable_if_t<__is_unsigned_integer<T>::value>> {
+struct type_char<T, std::enable_if_t<__is_unsigned_integer<T>::value>> {
     static constexpr char value = 'u';
 };
 
 template <class T>
-struct __type_char<T, std::enable_if_t<std::is_floating_point_v<T>>> {
+struct type_char<T, std::enable_if_t<std::is_floating_point_v<T>>> {
     static constexpr char value = 'f';
 };
 
 template <class T>
-struct __type_char<T, std::enable_if_t<
+struct type_char<T, std::enable_if_t<
         boost::mpl::or_<
             is_c_string<T>,
             is_std_string<T>,
@@ -192,7 +192,7 @@ struct __type_char<T, std::enable_if_t<
 };
 
 template <class T>
-struct __type_char<T, std::enable_if_t<
+struct type_char<T, std::enable_if_t<
         boost::mpl::or_<
             is_c_wstring<T>,
             is_std_wstring<T>,
@@ -203,7 +203,7 @@ struct __type_char<T, std::enable_if_t<
 };
 
 template <class T>
-struct __type_char<T, std::enable_if_t<is_bool<T>::value>> {
+struct type_char<T, std::enable_if_t<is_bool<T>::value>> {
     static constexpr char value = 'b';
 };
 
