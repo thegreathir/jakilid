@@ -125,19 +125,29 @@ template<class T>
 struct __is_signed_integer : boost::mpl::false_ {};
 
 template<>
-struct __is_signed_integer<signed char> : boost::mpl::true_ {};
+struct __is_signed_integer<signed char> : boost::mpl::true_ {
+    static constexpr char id[] = "i0";
+};
 
 template<>
-struct __is_signed_integer<short> : boost::mpl::true_ {};
+struct __is_signed_integer<short> : boost::mpl::true_ {
+    static constexpr char id[] = "i1";
+};
 
 template<>
-struct __is_signed_integer<int> : boost::mpl::true_ {};
+struct __is_signed_integer<int> : boost::mpl::true_ {
+    static constexpr char id[] = "i2";
+};
 
 template<>
-struct __is_signed_integer<long> : boost::mpl::true_ {};
+struct __is_signed_integer<long> : boost::mpl::true_ {
+    static constexpr char id[] = "i3";
+};
 
 template<>
-struct __is_signed_integer<long long> : boost::mpl::true_ {};
+struct __is_signed_integer<long long> : boost::mpl::true_ {
+    static constexpr char id[] = "i4";
+};
 
 template<class T>
 struct is_signed_integer : __is_signed_integer<std::remove_cv_t<T>> {};
@@ -148,42 +158,84 @@ template<class T>
 struct __is_unsigned_integer : boost::mpl::false_ {};
 
 template<>
-struct __is_unsigned_integer<unsigned char> : boost::mpl::true_ {};
+struct __is_unsigned_integer<unsigned char> : boost::mpl::true_ {
+    static constexpr char id[] = "u0";
+};
 
 template<>
-struct __is_unsigned_integer<unsigned short> : boost::mpl::true_ {};
+struct __is_unsigned_integer<unsigned short> : boost::mpl::true_ {
+    static constexpr char id[] = "u1";
+};
 
 template<>
-struct __is_unsigned_integer<unsigned int> : boost::mpl::true_ {};
+struct __is_unsigned_integer<unsigned int> : boost::mpl::true_ {
+    static constexpr char id[] = "u2";
+};
 
 template<>
-struct __is_unsigned_integer<unsigned long> : boost::mpl::true_ {};
+struct __is_unsigned_integer<unsigned long> : boost::mpl::true_ {
+    static constexpr char id[] = "u3";
+};
 
 template<>
-struct __is_unsigned_integer<unsigned long long> : boost::mpl::true_ {};
+struct __is_unsigned_integer<unsigned long long> : boost::mpl::true_ {
+    static constexpr char id[] = "u4";
+};
 
 template<class T>
 struct is_unsigned_integer : __is_unsigned_integer<std::remove_cv_t<T>> {};
 
+// real number
+
+template<class T>
+struct __is_real : boost::mpl::false_ {};
+
+template<>
+struct __is_real<float> : boost::mpl::true_ {
+    static constexpr char id[] = "f0";
+};
+
+template<>
+struct __is_real<double> : boost::mpl::true_ {
+    static constexpr char id[] = "f1";
+};
+
+template<>
+struct __is_real<long double> : boost::mpl::true_ {
+    static constexpr char id[] = "f2";
+};
+
+template<class T>
+struct is_real : __is_real<std::remove_cv_t<T>> {};
+
 /* ################################################## */
 
 template <class T, class = void> struct type_char {
-    static constexpr char value = '*';
+    static constexpr char value[] = "__";
 };
 
 template <class T>
-struct type_char<T, std::enable_if_t<__is_signed_integer<T>::value>> {
-    static constexpr char value = 'i';
+struct type_char<T, std::enable_if_t<is_signed_integer<T>::value>> {
+    static constexpr char value[2] = {
+        is_signed_integer<T>::id[0],
+        is_signed_integer<T>::id[1]
+    };
 };
 
 template <class T>
-struct type_char<T, std::enable_if_t<__is_unsigned_integer<T>::value>> {
-    static constexpr char value = 'u';
+struct type_char<T, std::enable_if_t<is_unsigned_integer<T>::value>> {
+    static constexpr char value[2] = {
+        is_unsigned_integer<T>::id[0],
+        is_unsigned_integer<T>::id[1]
+    };
 };
 
 template <class T>
-struct type_char<T, std::enable_if_t<std::is_floating_point_v<T>>> {
-    static constexpr char value = 'f';
+struct type_char<T, std::enable_if_t<is_real<T>::value>> {
+    static constexpr char value[2] = {
+        is_real<T>::id[0],
+        is_real<T>::id[1]
+    };
 };
 
 template <class T>
@@ -194,7 +246,7 @@ struct type_char<T, std::enable_if_t<
             is_char<T>
         >::value>> {
 
-  static constexpr char value = 's';
+  static constexpr char value[] = "s0";
 };
 
 template <class T>
@@ -205,12 +257,12 @@ struct type_char<T, std::enable_if_t<
             is_wchar<T>
         >::value>> {
 
-  static constexpr char value = 'w';
+  static constexpr char value[] = "w0";
 };
 
 template <class T>
 struct type_char<T, std::enable_if_t<is_bool<T>::value>> {
-    static constexpr char value = 'b';
+    static constexpr char value[] = "b0";
 };
 
 }

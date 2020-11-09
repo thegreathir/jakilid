@@ -33,7 +33,7 @@ auto emplace(std::size_t n, const uint8_t *data,
   SharedString res{SharedStringAllocator(segment_manager)};
   res.resize(n + 1);
 
-  res[0] = traits::type_char<T>::value;
+  res[0] = traits::type_char<T>::value[0];
   std::copy_n(data, n, std::next(res.data(), 1));
   return res;
 }
