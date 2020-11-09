@@ -38,78 +38,25 @@ auto emplace(std::size_t n, const uint8_t *data,
   return res;
 }
 
-// signed int -> long long
+// bool, char, wchar, integer, real
 
 template <class T, class SegmentManager>
-std::enable_if_t<traits::is_signed_integer<T>::value, SharedString>
-Serialize(T t, const SegmentManager &segment_manager) {
-  auto value = static_cast<long long>(t);
-  return emplace<long long, SegmentManager>(
-      sizeof(long long), reinterpret_cast<const uint8_t *>(&value),
-      segment_manager);
-}
-
-template <class T, class = void>
-std::enable_if_t<traits::is_signed_integer<T>::value, T>
-Deserialize(const SharedString &str) {
-  long long value =
-      *reinterpret_cast<const long long *>(std::next(str.c_str(), 1));
-  return static_cast<T>(value);
-}
-
-// unsigned int -> unsigned long long
-
-template <class T, class SegmentManager>
-std::enable_if_t<traits::is_unsigned_integer<T>::value, SharedString>
-Serialize(T t, const SegmentManager &segment_manager) {
-  auto value = static_cast<unsigned long long>(t);
-  return emplace<unsigned long long, SegmentManager>(
-      sizeof(unsigned long long), reinterpret_cast<const uint8_t *>(&value),
-      segment_manager);
-}
-
-template <class T, class = void>
-std::enable_if_t<traits::is_unsigned_integer<T>::value, T>
-Deserialize(const SharedString &str) {
-  unsigned long long value =
-      *reinterpret_cast<const unsigned long long *>(std::next(str.c_str(), 1));
-  return static_cast<T>(value);
-}
-
-// floating point -> long double
-
-template <class T, class SegmentManager>
-std::enable_if_t<std::is_floating_point_v<T>, SharedString>
-Serialize(T t, const SegmentManager &segment_manager) {
-  auto value = static_cast<long double>(t);
-  return emplace<long double, SegmentManager>(
-      sizeof(long double), reinterpret_cast<const uint8_t *>(&value),
-      segment_manager);
-}
-
-template <class T, class = void>
-std::enable_if_t<std::is_floating_point_v<T>, T>
-Deserialize(const SharedString &str) {
-  long double value =
-      *reinterpret_cast<const long double *>(std::next(str.c_str(), 1));
-  return static_cast<T>(value);
-}
-
-// bool, char, wchar
-
-template <class T, class SegmentManager>
-std::enable_if_t<boost::mpl::or_<traits::is_bool<T>, traits::is_char<T>,
-                                 traits::is_wchar<T>>::value,
-                 SharedString>
+std::enable_if_t<
+    std::disjunction<traits::is_bool<T>, traits::is_char<T>,
+                     traits::is_wchar<T>, traits::is_signed_integer<T>,
+                     traits::is_unsigned_integer<T>, traits::is_real<T>>::value,
+    SharedString>
 Serialize(T t, const SegmentManager &segment_manager) {
   return emplace<T, SegmentManager>(
       sizeof(T), reinterpret_cast<const uint8_t *>(&t), segment_manager);
 }
 
 template <class T, class = void>
-std::enable_if_t<boost::mpl::or_<traits::is_bool<T>, traits::is_char<T>,
-                                 traits::is_wchar<T>>::value,
-                 T>
+std::enable_if_t<
+    std::disjunction<traits::is_bool<T>, traits::is_char<T>,
+                     traits::is_wchar<T>, traits::is_signed_integer<T>,
+                     traits::is_unsigned_integer<T>, traits::is_real<T>>::value,
+    T>
 Deserialize(const SharedString &str) {
   return *reinterpret_cast<const T *>(std::next(str.c_str(), 1));
 }
