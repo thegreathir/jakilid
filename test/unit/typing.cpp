@@ -53,6 +53,15 @@ public:
     using key_type = typename T::first_type;
     using value_type = typename T::second_type;
     using another_type = typename jakilid::test::tuple_another<value_type, value_types>::type;
+
+    jakilid::SharedDict dict;
+    jakilid::test::Random rnd_engine;
+
+    TypingFindInsert()
+    : dict("shd")
+    {
+        dict.Drop();
+    };
 };
 
 
@@ -60,43 +69,22 @@ using test_types = jakilid::test::tuple_to_gtest_types<all_pairs, ::testing::Typ
 
 TYPED_TEST_SUITE(TypingFindInsert, test_types);
 
-TYPED_TEST(TypingFindInsert, print) {
-    std::cout << typeid(typename TestFixture::key_type).name() << std::endl;
-    std::cout << typeid(typename TestFixture::value_type).name() << std::endl;
-    std::cout << typeid(typename TestFixture::another_type).name() << std::endl;
-}
+TYPED_TEST(TypingFindInsert, test_typing_functionality) {
 
-/*
-TEST(sample, sample2) {
-    jakilid::SharedDict d("shd");
+    const auto key1 = this->rnd_engine.template generate<typename TestFixture::key_type>();
 
-    d.Insert(-10, L"امیرعباس");
-    d.Insert<float>(false, 1.0/4);
-
-    std::wstring res;
-
-    d.Find(-10, res);
-
-    std::cout << (res == L"امیرعباس") << std::endl;
+    typename TestFixture::value_type val;
+    EXPECT_FALSE(this->dict.Find(key1, val));
     
-    float f;
-    d.Find(false, f);
+    const auto val1 = this->rnd_engine.template generate<typename TestFixture::value_type>();
+    EXPECT_TRUE(this->dict.Insert(key1, val1));
 
-    std::cout << f << std::endl;
+    typename TestFixture::value_type val2;
+    EXPECT_TRUE(this->dict.Find(key1, val2));
+    EXPECT_EQ(val1, val2);
 
-    d.Insert("kkk", 'J');
-
-    char cc;
-    d.Find("kkk", cc);
-    std::cout << cc << std::endl;
-
-    signed char sc = -126;
-
-    d.Insert("SCC", sc);
-
-    signed char gh;
-    d.Find("SCC", gh);
-    std::cout << (int)gh << std::endl;
-
+    typename TestFixture::another_type another_val;
+    EXPECT_THROW({
+        this->dict.Find(key1, another_val);
+    }, std::domain_error);
 }
-*/

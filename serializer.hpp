@@ -10,6 +10,7 @@
 #include <boost/interprocess/containers/string.hpp>
 #include <boost/interprocess/managed_shared_memory.hpp>
 #include <boost/mpl/or.hpp>
+#include <stdexcept>
 #include <type_traits>
 
 namespace jakilid {
@@ -41,6 +42,14 @@ auto emplace(std::size_t n, const uint8_t *data,
   return res;
 }
 
+template<class T>
+void raise_for_type(const SharedString &str) {
+  for (size_t i = 0; i < kHeaderSize; ++i) {
+    if (traits::type_char<T>::value[i] != static_cast<char>(str[i]))
+      throw std::domain_error("Type mismatch in deserializing");
+  }
+}
+
 // bool, char, wchar, integer, real
 
 template <class T, class SegmentManager>
@@ -61,6 +70,7 @@ std::enable_if_t<
                      traits::is_unsigned_integer<T>, traits::is_real<T>>::value,
     T>
 Deserialize(const SharedString &str) {
+  raise_for_type<T>(str);
   return *reinterpret_cast<const T *>(std::next(str.c_str(), kHeaderSize));
 }
 
@@ -76,6 +86,7 @@ Serialize(const T &t, const SegmentManager &segment_manager) {
 template <class T, class = void>
 std::enable_if_t<traits::is_std_string<T>::value, T>
 Deserialize(const SharedString &str) {
+  raise_for_type<T>(str);
   return std::string(reinterpret_cast<const char *>(std::next(str.c_str(), kHeaderSize)),
                      (str.size() - kHeaderSize));
 }
@@ -93,6 +104,7 @@ Serialize(const T &t, const SegmentManager &segment_manager) {
 template <class T, class = void>
 std::enable_if_t<traits::is_std_wstring<T>::value, T>
 Deserialize(const SharedString &str) {
+  raise_for_type<T>(str);
   return std::wstring(
       reinterpret_cast<const wchar_t *>(std::next(str.c_str(), kHeaderSize)),
       (str.size() - kHeaderSize) / sizeof(wchar_t));
