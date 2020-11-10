@@ -23,6 +23,36 @@ TEST(typing, test_type_chars) {
     ASSERT_EQ("f1", get_type_char_string<double>());
 }
 
+TEST(typing, test_char_string_cast) {
+    jakilid::SharedDict dict{"__test__chstr"};
+    jakilid::test::Random rnd;
+
+    const auto key1 = rnd.generate<std::string>();
+    const auto key2 = rnd.generate<int>();
+
+    const auto valstr = rnd.generate<std::string>();
+    const auto valchr = rnd.generate<char>();
+
+
+    EXPECT_TRUE(dict.Insert(key1, valstr));
+
+    char read_chr;
+    EXPECT_TRUE(dict.Find(key1, read_chr));
+    EXPECT_EQ(valstr[0], read_chr);
+
+
+    EXPECT_TRUE(dict.Insert(key2, valchr));
+
+    std::string read_str;
+    EXPECT_TRUE(dict.Find(key2, read_str));
+    EXPECT_EQ(valchr, read_str[0]);
+
+    long long another_val;
+    EXPECT_THROW({
+        dict.Find(key2, another_val);
+    }, std::domain_error);
+}
+
 using value_types = std::tuple<
     float,
     char,
@@ -58,7 +88,7 @@ public:
     jakilid::test::Random rnd_engine;
 
     TypingFindInsert()
-    : dict("shd")
+    : dict("__test__shd")
     {
         dict.Drop();
     };
