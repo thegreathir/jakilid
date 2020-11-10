@@ -27,14 +27,17 @@ using SharedString =
     boost::interprocess::basic_string<uint8_t, std::char_traits<uint8_t>,
                                       SharedStringAllocator>;
 
+constexpr size_t kHeaderSize = 2;
+
 template <class T, class SegmentManager>
 auto emplace(std::size_t n, const uint8_t *data,
              const SegmentManager &segment_manager) {
   SharedString res{SharedStringAllocator(segment_manager)};
-  res.resize(n + 1);
+  res.resize(n + kHeaderSize);
 
   res[0] = traits::type_char<T>::value[0];
-  std::copy_n(data, n, std::next(res.data(), 1));
+  res[1] = traits::type_char<T>::value[1];
+  std::copy_n(data, n, std::next(res.data(), kHeaderSize));
   return res;
 }
 
@@ -58,7 +61,7 @@ std::enable_if_t<
                      traits::is_unsigned_integer<T>, traits::is_real<T>>::value,
     T>
 Deserialize(const SharedString &str) {
-  return *reinterpret_cast<const T *>(std::next(str.c_str(), 1));
+  return *reinterpret_cast<const T *>(std::next(str.c_str(), kHeaderSize));
 }
 
 // std string
@@ -73,8 +76,8 @@ Serialize(const T &t, const SegmentManager &segment_manager) {
 template <class T, class = void>
 std::enable_if_t<traits::is_std_string<T>::value, T>
 Deserialize(const SharedString &str) {
-  return std::string(reinterpret_cast<const char *>(std::next(str.c_str(), 1)),
-                     (str.size() - 1));
+  return std::string(reinterpret_cast<const char *>(std::next(str.c_str(), kHeaderSize)),
+                     (str.size() - kHeaderSize));
 }
 
 // std wstring
@@ -91,8 +94,8 @@ template <class T, class = void>
 std::enable_if_t<traits::is_std_wstring<T>::value, T>
 Deserialize(const SharedString &str) {
   return std::wstring(
-      reinterpret_cast<const wchar_t *>(std::next(str.c_str(), 1)),
-      (str.size() - 1) / sizeof(wchar_t));
+      reinterpret_cast<const wchar_t *>(std::next(str.c_str(), kHeaderSize)),
+      (str.size() - kHeaderSize) / sizeof(wchar_t));
 }
 
 // c string
