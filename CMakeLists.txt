@@ -13,4 +13,8 @@ add_subdirectory(extern/pybind11)
 
 pybind11_add_module(jakilid py.cpp)
 
+target_link_libraries(jakilid PRIVATE ${Boost_LIBRARIES})
+target_link_libraries(jakilid PRIVATE pthread)
+target_link_libraries(jakilid PRIVATE rt)
+
 add_subdirectory(test)

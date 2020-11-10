@@ -1,8 +1,8 @@
 #include "utils/random.hpp"
-#include "utils/mp.hpp"
 
 #include <traits.hpp>
 #include <jakilid.hpp>
+#include <mp.hpp>
 
 #include <gtest/gtest.h>
 
@@ -71,18 +71,18 @@ using value_types = std::tuple<
     int
 >;
 
-using pair1 = jakilid::test::construct_pair_tuple<char, value_types>::type;
-using pair2 = jakilid::test::construct_pair_tuple<std::string, value_types>::type;
-using pair3 = jakilid::test::construct_pair_tuple<int, value_types>::type;
+using pair1 = jakilid::mp::construct_pair_tuple<char, value_types>::type;
+using pair2 = jakilid::mp::construct_pair_tuple<std::string, value_types>::type;
+using pair3 = jakilid::mp::construct_pair_tuple<int, value_types>::type;
 
-using all_pairs = jakilid::test::concat_tuple<pair1, pair2, pair3>::type;
+using all_pairs = jakilid::mp::concat_tuple<pair1, pair2, pair3>::type;
 
 template<class T>
 class TypingFindInsert : public testing::Test {
 public:
     using key_type = typename T::first_type;
     using value_type = typename T::second_type;
-    using another_type = typename jakilid::test::tuple_another<value_type, value_types>::type;
+    using another_type = typename jakilid::mp::tuple_another<value_type, value_types>::type;
 
     jakilid::SharedDict dict;
     jakilid::test::Random rnd_engine;
@@ -95,7 +95,7 @@ public:
 };
 
 
-using test_types = jakilid::test::tuple_to_gtest_types<all_pairs, ::testing::Types>::types;
+using test_types = jakilid::mp::tuple_to_gtest_types<all_pairs, ::testing::Types>::types;
 
 TYPED_TEST_SUITE(TypingFindInsert, test_types);
 

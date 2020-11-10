@@ -51,6 +51,16 @@ public:
         return true;
     }
 
+    template<class Key>
+    std::optional<SharedString> FindRaw(const Key& key) const {
+        open();
+        SharedString res(manager());
+        if (!hash_map_->find(InternalSerialize(key), res))
+            return {};
+
+        return res;
+    }
+
 
     template<class Key>
     bool Contains(const Key &key) const {

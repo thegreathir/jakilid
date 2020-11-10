@@ -7,7 +7,7 @@
 
 namespace jakilid {
 
-namespace test {
+namespace mp {
 
 template<class T, class U ,class ...Ts> 
 struct another {
